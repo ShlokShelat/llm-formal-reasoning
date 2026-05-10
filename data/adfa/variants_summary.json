@@ -1,0 +1,13 @@
+{
+  "n_positives": 243,
+  "v1_count": 133,
+  "v2_count": 243,
+  "v3_count": 133,
+  "v4_count": 243,
+  "v1_coverage": "55%",
+  "v2_coverage": "100%",
+  "v3_coverage": "55%",
+  "step3_present": 243,
+  "step5_present": 243,
+  "step6_present": 229
+}

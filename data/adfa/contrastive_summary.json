@@ -1,0 +1,13 @@
+{
+  "n_tier4_total": 285,
+  "n_positives": 243,
+  "n_negatives_natural": 42,
+  "n_negatives_synthetic": 2,
+  "n_negatives_used": 44,
+  "negative_error_types": {
+    "natural": 42,
+    "inject_kmp_error": 2
+  },
+  "positives_file": "data/adfa/contrastive_positives.jsonl",
+  "negatives_file": "data/adfa/contrastive_negatives.jsonl"
+}
