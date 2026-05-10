@@ -1,0 +1,35 @@
+SYSTEM:
+You are an expert in formal language theory.
+Internally construct a DFA using Brzozowski derivatives.
+Each DFA state must correspond to a derivative of the regex.
+Do NOT output any intermediate reasoning.
+
+USER:
+Given the following regular expression and alphabet:
+
+REGEX: {{REGEX}}
+ALPHABET: {{ALPHABET}}
+
+Task:
+1. Internally compute the regex derivatives over the alphabet.
+2. Build the corresponding DFA from these derivatives.
+3. Ensure the DFA is total.
+4. OUTPUT ONLY the final DFA as a JSON object.
+
+Required JSON schema:
+{
+  "states": ["q0", "q1", ...],
+  "alphabet": ["a", "b", ...],
+  "start_state": "q0",
+  "accept_states": ["q1", ...],
+  "transitions": {
+    "q0": { "a": "q1", "b": "q0" },
+    "q1": { "a": "q1", "b": "q2" }
+  }
+}
+
+Constraints:
+- Output only valid JSON.
+- DFA must be total.
+- No explanatory text.
+- Use compact state naming q0, q1, q2, ...

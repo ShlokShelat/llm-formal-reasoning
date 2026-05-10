@@ -1,0 +1,45 @@
+You are required to produce output in EXACTLY THREE sections.
+If you violate the format, your entire output is INVALID.
+
+SECTION HEADINGS MUST BE EXACTLY:
+=== TASK 1 ===
+=== TASK 2 ===
+=== TASK 3 ===
+
+Do NOT add extra commentary.
+Do NOT reorder. Do NOT skip. Do NOT merge tasks.
+
+INPUT
+REGEX: {{REGEX}}
+ALPHABET: {{ALPHABET}}
+
+=== TASK 1 ===
+Write 6-12 complete sentences describing the language.
+You MUST describe:
+- How strings begin and end
+- Mandatory patterns
+- Forbidden patterns
+- Repetition structure
+- Any blocks or grouping
+No lists. Only sentences.
+
+=== TASK 2 ===
+Output EXACTLY:
+ACCEPTED:
+(10 accepted strings, one per line, covering ALL major structural paths of the regex)
+
+REJECTED:
+(10 rejected strings, one per line)
+
+No explanations.
+
+=== TASK 3 ===
+For each of the 3 strings:
+{{EDGE_CASE_1}}
+{{EDGE_CASE_2}}
+{{EDGE_CASE_3}}
+
+Output EXACTLY:
+{{EDGE_CASE_1}} -> ACCEPTED/REJECTED: <1-2 line justification>
+{{EDGE_CASE_2}} -> ACCEPTED/REJECTED: <1-2 line justification>
+{{EDGE_CASE_3}} -> ACCEPTED/REJECTED: <1-2 line justification>

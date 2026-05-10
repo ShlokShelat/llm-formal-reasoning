@@ -1,0 +1,49 @@
+# Model configurations
+# Architecture values from Table 7 (Appendix D.1)
+
+qwen25:
+  "1.5b":
+    hf_id: "Qwen/Qwen2.5-1.5B-Instruct"
+    hidden_layers: 28
+    hidden_dim: 1536
+    mlp_intermediate: 8960
+    attention_heads_q: 12
+    attention_heads_kv: 2
+    activation: SiLU
+
+  "7b":
+    hf_id: "Qwen/Qwen2.5-7B-Instruct"
+    hidden_layers: 28
+    hidden_dim: 3584
+    mlp_intermediate: 18944
+    attention_heads_q: 28
+    attention_heads_kv: 4
+    activation: SiLU
+    # Mechanistic analysis specifics (Section 4.2)
+    neurons_sampled_per_layer: 2000       # 2000 x 28 = 56,000 total
+    outcome_encoding_layer: 10            # 87.1% predictive accuracy
+    execution_peak_layer: 27              # 22 of top-25 ADS neurons here
+
+  "14b":
+    hf_id: "Qwen/Qwen2.5-14B-Instruct"
+    hidden_layers: 48
+    hidden_dim: 5120
+    mlp_intermediate: 13824
+    attention_heads_q: 40
+    attention_heads_kv: 8
+    activation: SiLU
+
+frontier:
+  gpt52:
+    model_id: "gpt-5.2"
+    api: openai
+    temperature: 0.0
+  grok41:
+    model_id: "grok-4.1"
+    api: xai
+    temperature: 0.0
+    note: "Did not produce complete DFAs within budget (Section 3)"
+  gemini25:
+    model_id: "gemini-2.5"
+    api: google
+    temperature: 0.0

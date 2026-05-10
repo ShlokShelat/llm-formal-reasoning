@@ -1,0 +1,24 @@
+# Core ML
+torch>=2.1.0
+transformers>=4.40.0
+peft>=0.10.0
+trl>=0.8.6
+accelerate>=0.28.0
+datasets>=2.18.0
+
+# Training
+scikit-learn>=1.4.0
+numpy>=1.26.0
+
+# API clients — frontier model evaluation
+openai>=1.20.0
+anthropic>=0.25.0
+google-generativeai>=0.5.0
+
+# Utilities
+tqdm>=4.66.0
+pyyaml>=6.0
+jsonlines>=4.0.0
+
+# Optional — Flash Attention (strongly recommended on H100)
+# pip install flash-attn --no-build-isolation

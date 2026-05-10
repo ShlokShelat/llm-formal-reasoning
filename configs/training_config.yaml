@@ -1,0 +1,82 @@
+# Training hyperparameters — all values from Appendix D.2
+# Identical across all model sizes and supervision formats
+
+lora:
+  r: 32
+  alpha: 64
+  dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  bias: none
+  task_type: CAUSAL_LM
+
+optimizer:
+  name: adamw_torch_fused
+  lr: 2.0e-4
+  weight_decay: 0.01
+  scheduler: cosine
+  warmup_ratio: 0.03
+
+training:
+  epochs: 2
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 8      # effective batch size = 8
+  max_seq_length: 8192
+  precision: bfloat16
+  tf32: true
+  gradient_checkpointing: true
+  seed: 42
+
+evaluation:
+  eval_steps: 200
+  save_steps: 200
+  save_total_limit: 3
+  iid_eval_samples: 200
+  ood_eval_samples: 200
+
+curriculum:
+  early_stopping_patience: 5
+  replay_ratio: 0.10
+
+compute:
+  gpu: "NVIDIA H100 80GB"
+  max_wall_time_hours: 48
+  cpus_per_task: 8
+  memory_gb: 80
+
+dataset:
+  train_size: 22500
+  test_size: 1000
+  val_iid_size: 200
+  val_ood_size: 200
+  max_dfa_states_pre_min: 24
+  max_dfa_states_post_min: 18
+  verify_max_string_len: 7
+  equivalence_check_max_len: 6
+  tier_distribution:
+    1: 0.15
+    2: 0.25
+    3: 0.35
+    4: 0.25
+  min_dfa_states_by_tier:
+    1: 2
+    2: 2
+    3: 3
+    4: 4
+
+mechanistic:
+  neurons_per_layer_sample: 2000
+  top_k_neurons: 100
+  adfa_bleed_threshold: 0.5
+  alpha_neuron: 0.5
+  alpha_static: 1.0
+  delta_sadi: 2.0
+  sadi_top_percentile: 90.0
+  vgns_rounds: 4
+  representation_probe_cv_folds: 5

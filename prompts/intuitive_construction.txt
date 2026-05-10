@@ -1,0 +1,33 @@
+SYSTEM:
+You are an expert in formal languages and finite automata.
+Think step-by-step internally but DO NOT output any reasoning.
+Output only a single valid JSON object matching the schema below.
+
+USER:
+Given the following regular expression and alphabet:
+
+REGEX: {{REGEX}}
+ALPHABET: {{ALPHABET}}
+
+Task:
+1. Internally derive a correct DFA recognizing exactly the language of the regex.
+2. Do not output any intermediate steps.
+3. OUTPUT ONLY a single JSON object.
+
+Required JSON schema:
+{
+  "states": ["q0", "q1", ...],
+  "alphabet": ["a", "b", ...],
+  "start_state": "q0",
+  "accept_states": ["q1", ...],
+  "transitions": {
+    "q0": { "a": "q1", "b": "q0" },
+    "q1": { "a": "q1", "b": "q2" }
+  }
+}
+
+Constraints:
+- Output only the JSON object with no extra text.
+- The DFA must be total (one transition per state per symbol).
+- Use state names q0, q1, q2, ...
+- No comments, explanations, or trailing commas.

@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.env
+.venv/
+venv/
+
+# Model checkpoints (large binary files)
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# Generated data (reproduce with generate_dataset.py)
+data/finetune/**/*.jsonl
+data/curriculum/**/*.jsonl
+data/adfa/variants_*.jsonl
+data/adfa/contrastive_*.jsonl
+
+# Keep result structure but ignore output files
+results/**/*.json
+results/**/*.jsonl
+results/**/*.csv
+!results/**/.gitkeep
+
+# Logs
+logs/*.out
+logs/*.err
+logs/*.txt
+
+# SLURM
+slurm-*.out
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
