@@ -1,0 +1,32 @@
+=== TASK 1 ===
+The language consists of strings over {a,b} that are built from an initial repetition of either a single b or a longer block that starts with a, ends with b, and may contain repeated internal segments. After that initial repeated part, every string must contain an a, then another a, and then finish with a fixed tail that ends in bba. The ending is always of the form (bb or bbb repeated zero or more times) followed by bba, so every string ends with at least three b’s in a row. The middle portion between the two required a’s is a block of the form a(bb or bbb repeated zero or more times)ba repeated zero or more times, meaning it is made of zero or more chunks each starting with a, then some number of bb/bbb groups, then ba. The same kind of repeated chunk structure can also appear inside the initial repeated part, but there it is wrapped so that the whole alternative begins with a and ends with b. Because of the mandatory “aa” in the final concatenation, no string in the language can be empty or end in a. Every accepted string contains at least two a’s (those two required a’s), and it contains no symbols outside a and b. The repetition structure is nested: an outer Kleene star over (b or a(…)*b), and inside the a(…)*b alternative there is another Kleene star over the chunk a(bb|bbb)*ba. The only way to introduce a’s is through those chunked blocks and the final required aa…, so any a must appear as part of those grouped patterns rather than arbitrarily. The final tail forces the last a before the ending b’s to be followed by a sequence of bb/bbb groups and then exactly bba, so endings like “…bab” or “…b” are forbidden.
+
+=== TASK 2 ===
+ACCEPTED:
+aabba
+aaabbba
+baaabbba
+bbaabbbba
+aaababbba
+aabbaabbbba
+baababbba
+abbbaabbbba
+babaaabbba
+ababbbaababbba
+
+REJECTED:
+a
+b
+aa
+aabb
+abba
+baaba
+abab
+bbb
+aababa
+babbabaab
+
+=== TASK 3 ===
+aaababbb → REJECTED: The string ends with bbb, but the regex requires the final suffix to be (bb|bbb)* followed by bba, so it must end in bba. It also cannot be decomposed to end with the mandatory trailing bba.
+babbabaab → REJECTED: The regex forces the string to end with bba (at least three final b’s with the last three being bba), but this string ends with aab. Therefore it cannot match the required final tail.
+ababbbaab → REJECTED: The regex requires the final tail to end with bba, but this string ends with aab. Since the last symbol is b, it still fails because the last three symbols are not bba and the required ending structure is missing.
