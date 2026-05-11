@@ -1,6 +1,3 @@
-# Model configurations
-# Architecture values from Table 7 (Appendix D.1)
-
 qwen25:
   "1.5b":
     hf_id: "Qwen/Qwen2.5-1.5B-Instruct"
