@@ -8,36 +8,23 @@ build/
 .venv/
 venv/
 
-# Model checkpoints (large binary files)
+# Model checkpoints (large — keep on HPC only)
 checkpoints/
 *.safetensors
 *.bin
 *.pt
 *.pth
 
-# Generated data (reproduce with generate_dataset.py)
-data/finetune/**/*.jsonl
-data/curriculum/**/*.jsonl
-data/adfa/variants_*.jsonl
-data/adfa/contrastive_*.jsonl
+# Large data files — tracked selectively below
+# zip files ARE tracked (compressed datasets for GitHub)
+*.jsonl
 
-# Keep result structure but ignore output files
-results/**/*.json
-results/**/*.jsonl
-results/**/*.csv
-!results/**/.gitkeep
-
-# Logs
-logs/*.out
-logs/*.err
-logs/*.txt
-
-# SLURM
-slurm-*.out
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
+# Exceptions — small enough to track directly
+!data/finetune/regex_dfa_dataset_val.jsonl
+!data/finetune/regex_dfa_dataset_test.jsonl
+!data/curriculum/curriculum_val.jsonl
+!data/curriculum/curriculum_test.jsonl
+!data/adfa/*.jsonl
 
 # macOS
 .DS_Store
@@ -48,3 +35,4 @@ slurm-*.out
 .vscode/
 .idea/
 *.swp
+*.swo
