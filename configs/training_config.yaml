@@ -1,6 +1,3 @@
-# Training hyperparameters — all values from Appendix D.2
-# Identical across all model sizes and supervision formats
-
 lora:
   r: 32
   alpha: 64
