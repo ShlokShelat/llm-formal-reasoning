@@ -144,8 +144,8 @@ bash scripts/run_mechanistic.sh
 | CoT SFT     | 1.5B | 96.0%   | 100% | 100% | 100% | 80.5% |
 | CoT SFT     | 7B   | 96.5%   | 100% | 100% | 100% | 82.9% |
 | CoT SFT     | 14B  | 96.3%   | 100% | 100% | 100% | 82.1% |
-| No-CoT SFT  | 7B   | 98.0%   | 100% | 100% | 100% | 95.4% |
-| No-CoT SFT  | 14B  | 98.0%   | 100% | 100% | 97.5%| 97.7% |
+| No-CoT SFT  | 7B   | 88.0%   | 100% | 100% | 100% | 85.4% |
+| No-CoT SFT  | 14B  | 88.0%   | 100% | 100% | 97.5%| 87.7% |
 
 ### Steering Interventions — Tier 4, CoT-trained 7B (Table 4)
 
