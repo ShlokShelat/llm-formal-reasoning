@@ -1,5 +1,5 @@
 """
-compute_ace_scores.py  --  Phase 2: Activation Difference Scoring (ADS)
+compute_ads_scores.py  --  Phase 2: Activation Difference Scoring (ADS)
 ===========================
 Replaces CE-based ACE scoring with activation difference scoring,
 which is standard in mechanistic interpretability literature
@@ -24,18 +24,18 @@ METHOD:
   We take the mean over all completion token positions.
 
 OUTPUT FILES:
-  ace_scores.json          -- full ADS scores for all neurons
+  ads_scores.json          -- full ADS scores for all neurons
   good_neurons.json        -- Top-K facilitating neurons
   bad_neurons.json         -- Top-K inhibiting neurons
   mixed_neurons.json       -- Top-K neurons high on both
-  ace_layer_summary.json   -- per-layer aggregated stats
+  ads_layer_summary.json   -- per-layer aggregated stats
 
 USAGE:
-    python compute_ace_scores.py \
+    python compute_ads_scores.py \
         --base_model   Qwen/Qwen2.5-7B-Instruct \
         --adapter_dir  checkpoints/qwen7b_lora \
         --adfa_file    data/adfa/contrastive_combined.jsonl \
-        --output_dir   results/ace_cot_7b \
+        --output_dir   results/ads_cot_7b \
         --top_k        100 \
         --neurons_per_layer_sample 200
 """
@@ -158,7 +158,7 @@ def get_model_info(model) -> dict:
 #  MAIN SCORING LOOP
 # ===========================
 
-def compute_ace_scores(args):
+def compute_ads_scores(args):
     # Load model
     logger.info("Loading tokenizer...")
     tokenizer = AutoTokenizer.from_pretrained(
@@ -231,8 +231,8 @@ def compute_ace_scores(args):
     rng      = np.random.default_rng(42)
     n_sample = args.neurons_per_layer_sample
 
-    ace_good = defaultdict(dict)
-    ace_bad  = defaultdict(dict)
+    ads_good = defaultdict(dict)
+    ads_bad  = defaultdict(dict)
 
     logger.info(
         f"Computing ADS scores: "
@@ -260,18 +260,18 @@ def compute_ace_scores(args):
 
         for neuron_idx in neuron_sample:
             d = float(diff[neuron_idx])
-            ace_good[layer_idx][neuron_idx] = max(d,  0.0)
-            ace_bad[layer_idx][neuron_idx]  = max(-d, 0.0)
+            ads_good[layer_idx][neuron_idx] = max(d,  0.0)
+            ads_bad[layer_idx][neuron_idx]  = max(-d, 0.0)
 
     # Save full scores
-    scores_path = os.path.join(args.output_dir, "ace_scores.json")
+    scores_path = os.path.join(args.output_dir, "ads_scores.json")
     scores_data = {
-        "ace_good": {
+        "ads_good": {
             str(l): {str(n): v for n, v in neurons.items()}
-            for l, neurons in ace_good.items()},
-        "ace_bad": {
+            for l, neurons in ads_good.items()},
+        "ads_bad": {
             str(l): {str(n): v for n, v in neurons.items()}
-            for l, neurons in ace_bad.items()},
+            for l, neurons in ads_bad.items()},
         "meta": {
             "method":           "activation_difference_scoring_ADS",
             "n_layers":         n_layers,
@@ -290,14 +290,14 @@ def compute_ace_scores(args):
     logger.info(f"Identifying top-{args.top_k} good and bad neurons...")
 
     all_neurons = []
-    for layer_idx, neurons in ace_good.items():
+    for layer_idx, neurons in ads_good.items():
         for neuron_idx, good_score in neurons.items():
-            bad_score = ace_bad.get(layer_idx, {}).get(neuron_idx, 0.0)
+            bad_score = ads_bad.get(layer_idx, {}).get(neuron_idx, 0.0)
             all_neurons.append({
                 "layer":    int(layer_idx),
                 "neuron":   int(neuron_idx),
-                "ace_good": good_score,
-                "ace_bad":  bad_score,
+                "ads_good": good_score,
+                "ads_bad":  bad_score,
                 "net_good": good_score - bad_score,
                 "net_bad":  bad_score - good_score,
             })
@@ -308,7 +308,7 @@ def compute_ace_scores(args):
         all_neurons, key=lambda x: x["net_bad"],  reverse=True)[:args.top_k]
     mixed_neurons = sorted(
         all_neurons,
-        key=lambda x: x["ace_good"] + x["ace_bad"],
+        key=lambda x: x["ads_good"] + x["ads_bad"],
         reverse=True)[:args.top_k // 2]
 
     with open(os.path.join(args.output_dir, "good_neurons.json"), "w") as f:
@@ -321,40 +321,40 @@ def compute_ace_scores(args):
     logger.info(
         f"Top good neuron: layer={good_neurons[0]['layer']}, "
         f"neuron={good_neurons[0]['neuron']}, "
-        f"ads_good={good_neurons[0]['ace_good']:.4f}")
+        f"ads_good={good_neurons[0]['ads_good']:.4f}")
     logger.info(
         f"Top bad  neuron: layer={bad_neurons[0]['layer']}, "
         f"neuron={bad_neurons[0]['neuron']}, "
-        f"ads_bad={bad_neurons[0]['ace_bad']:.4f}")
+        f"ads_bad={bad_neurons[0]['ads_bad']:.4f}")
 
     # Per-layer summary
     layer_summary = []
     for layer_idx in layers_to_score:
-        neurons = ace_good.get(layer_idx, {})
+        neurons = ads_good.get(layer_idx, {})
         if not neurons:
             continue
         good_vals = list(neurons.values())
         bad_vals  = [
-            ace_bad.get(layer_idx, {}).get(n, 0) for n in neurons]
+            ads_bad.get(layer_idx, {}).get(n, 0) for n in neurons]
         layer_summary.append({
             "layer":          layer_idx,
-            "mean_ace_good":  float(np.mean(good_vals)),
-            "max_ace_good":   float(np.max(good_vals)),
-            "mean_ace_bad":   float(np.mean(bad_vals)),
-            "max_ace_bad":    float(np.max(bad_vals)),
+            "mean_ads_good":  float(np.mean(good_vals)),
+            "max_ads_good":   float(np.max(good_vals)),
+            "mean_ads_bad":   float(np.mean(bad_vals)),
+            "max_ads_bad":    float(np.max(bad_vals)),
             "n_good_neurons": sum(1 for v in good_vals if v > 0.01),
             "n_bad_neurons":  sum(1 for v in bad_vals  if v > 0.01),
         })
 
     with open(
-            os.path.join(args.output_dir, "ace_layer_summary.json"), "w"
+            os.path.join(args.output_dir, "ads_layer_summary.json"), "w"
     ) as f:
         json.dump(layer_summary, f, indent=2)
     logger.info("ADS scoring complete.")
 
     # Sanity check
-    top_good = good_neurons[0]['ace_good'] if good_neurons else 0
-    top_bad  = bad_neurons[0]['ace_bad']   if bad_neurons  else 0
+    top_good = good_neurons[0]['ads_good'] if good_neurons else 0
+    top_bad  = bad_neurons[0]['ads_bad']   if bad_neurons  else 0
     logger.info(
         f"Sanity: top ADS_good={top_good:.4f}, top ADS_bad={top_bad:.4f}")
     if top_good < 0.001 and top_bad < 0.001:
@@ -371,12 +371,12 @@ def main():
     p.add_argument("--base_model",   required=True)
     p.add_argument("--adapter_dir",  required=True)
     p.add_argument("--adfa_file",    required=True)
-    p.add_argument("--output_dir",   default="results/ace_cot_7b")
+    p.add_argument("--output_dir",   default="results/ads_cot_7b")
     p.add_argument("--top_k",        type=int, default=100)
     p.add_argument("--neurons_per_layer_sample", type=int, default=200)
     p.add_argument("--max_examples", type=int, default=None)
     args = p.parse_args()
-    compute_ace_scores(args)
+    compute_ads_scores(args)
 
 
 if __name__ == "__main__":
