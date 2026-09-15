@@ -2,9 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
-[![ACL Submission](https://img.shields.io/badge/ACL-2025-blue)]()
+[![ICLR Submission](https://img.shields.io/badge/ICLR-2027-blue)]()
 
-Official artifact repository for *"Testing the Limits of Large Language Models on Regular Languages"*.
+Official artifact repository for *"Beyond Pattern Matching: Tracing Symbolic Reasoning Failures in LLMs to Their Mechanistic Origin"*.
 
 ---
 
@@ -15,7 +15,10 @@ class — where correctness is fully verifiable. Using a staged diagnostic frame
 GPT-5.2, Grok-4.1, Gemini-2.5, and Qwen2.5 (1.5B / 7B / 14B), we identify
 **11 systematic failure modes** and show that fine-tuning substantially closes the gap
 on simpler tiers while Tier 4 failures (full subset construction) resist every
-intervention tested, including our proposed VGNS framework.
+intervention tested. A mechanistic analysis — activation difference scoring, layer
+probing, **activation patching**, and steering — shows the failure is not localized to any
+neuron or layer and cannot be repaired by correcting the internal representation, indicating
+the required computation is absent from the weights rather than merely mislocated.
 
 ---
 
@@ -27,7 +30,7 @@ cd llm-formal-reasoning
 pip install -r requirements.txt
 ```
 
-Hardware: single NVIDIA H100 80 GB per training job.
+Hardware: single NVIDIA H100 80 GB per training or patching job.
 Frontier model evaluation runs via API only (no local GPU needed).
 
 ---
@@ -59,10 +62,13 @@ llm-formal-reasoning/
 │   │   ├── train_qwen_cot.py       # Appendix G.10
 │   │   └── train_lora.py           # Appendix G.10
 │   ├── mechanistic/
-│   │   ├── build_adfa_variants.py  # Appendix G.11
-│   │   ├── compute_ads_scores.py   # Appendix G.11
+│   │   ├── build_adfa_variants.py       # Appendix G.11
+│   │   ├── compute_ads_scores.py        # Appendix G.11
 │   │   ├── extract_steering_vectors.py  # Appendix G.11
-│   │   └── run_steering_eval.py    # Appendix G.11
+│   │   ├── run_steering_eval.py         # Appendix G.11
+│   │   ├── run_activation_patching.py   # single-layer activation patching (Section 5.2)
+│   │   ├── run_multilayer_patching.py   # windowed / all-layer patching (Section 5.2)
+│   │   └── merge_patching_results.py    # combine patching runs into the recovery curve
 │   └── evaluation/
 │       └── evaluate.py             # Referenced in SLURM scripts
 │
@@ -72,6 +78,7 @@ llm-formal-reasoning/
 │   ├── run_curriculum.sh
 │   ├── run_frontier_eval.sh
 │   ├── run_mechanistic.sh
+│   ├── run_patching.sh             # launches the activation patching experiments
 │   └── slurm/
 │       ├── submit_curriculum_phasewise.sh  # Appendix G.10
 │       └── launch_all_curriculum.sh        # Appendix G.10
@@ -127,10 +134,46 @@ bash scripts/slurm/launch_all_curriculum.sh 7b
 bash scripts/run_curriculum.sh --model_size 7b --order_name natural --ordering 1,2,3,4,5
 ```
 
-### 6 — Mechanistic analysis (Section 4.2)
+### 6 — Mechanistic analysis (Section 5.2)
+
+Neuron scoring, steering vectors, and steering evaluation (ADS, ADFA variants, VGNS):
 ```bash
 bash scripts/run_mechanistic.sh
 ```
+
+Activation patching — the causal test of whether correcting the model's internal
+representation repairs the failure. For each failing example we replace the hidden
+state at a chosen layer (or set of layers) with the mean hidden state of correctly
+solved examples, then check whether the output becomes correct:
+```bash
+BASE_MODEL=Qwen/Qwen2.5-7B-Instruct \
+ADAPTER_DIR=checkpoints/qwen7b_cot \
+TEST_FILE=data/finetune/cot/regex_dfa_dataset_test.jsonl \
+OUTPUT_DIR=results/patching \
+bash scripts/run_patching.sh
+```
+
+Or run a single mode directly:
+```bash
+# single-layer sweep (patch each of the 28 layers on its own; control at chosen layers)
+python src/mechanistic/run_activation_patching.py \
+    --base_model  Qwen/Qwen2.5-7B-Instruct --adapter_dir checkpoints/qwen7b_cot \
+    --test_file   data/finetune/cot/regex_dfa_dataset_test.jsonl \
+    --output_dir  results/patching/single_layer \
+    --control_layers 10,20,27 --batch_size 24
+
+# patch a set/range of layers together (e.g. all layers at once, or windows)
+python src/mechanistic/run_multilayer_patching.py \
+    --base_model  Qwen/Qwen2.5-7B-Instruct --adapter_dir checkpoints/qwen7b_cot \
+    --test_file   data/finetune/cot/regex_dfa_dataset_test.jsonl \
+    --output_dir  results/patching/all_layers \
+    --layer_sets  "0-27" --batch_size 24
+```
+
+Each run writes `split.json` (baseline correct/incorrect) and a per-layer or per-set
+recovery record. `merge_patching_results.py` combines the outputs of a split (e.g. two
+GPUs, one covering early layers and one covering late layers) into a single
+recovery-vs-layer curve. A CUDA GPU is required; the scripts refuse to run on CPU.
 
 ---
 
@@ -157,6 +200,21 @@ bash scripts/run_mechanistic.sh
 | Good neurons ×1.5      | 86.0%     | +0.7 pp |
 | Random (control)       | 85.6%     | +0.3 pp |
 | Probe direction        | 84.9%     | −0.4 pp |
+
+### Activation Patching — Tier 4, CoT-trained 7B (Section 5.2)
+
+Recovery of failing examples when the internal representation is replaced with the
+mean correct representation. No layer, range of layers, or all-layers-at-once patch
+recovers failures beyond the final-layer noise floor (the incorrect-source control
+recovers as many or more), giving causal evidence that the failure is not repairable
+by correcting the representation.
+
+| Patch scope                       | Failing examples recovered |
+|-----------------------------------|----------------------------|
+| Each single layer (0–25)          | 0                          |
+| Final layers (26, 27)             | 4–5 (control recovers ≥)   |
+| Windowed ranges (except last)     | 0                          |
+| All 28 layers at once             | 0                          |
 
 ---
 
@@ -196,9 +254,9 @@ bash scripts/run_mechanistic.sh
 All experiments: `seed=42`, full determinism across Python / NumPy / PyTorch / CUDA.
 
 ```bibtex
-@article{llm-regular-languages-2025,
-  title  = {Testing the Limits of Large Language Models on Regular Languages},
+@article{llm-regular-languages,
+  title  = {Beyond Pattern Matching: Tracing Symbolic Reasoning Failures in LLMs to Their Mechanistic Origin},
   author = {Anonymous},
-  year   = {2025}
+  year   = {2027}
 }
 ```
