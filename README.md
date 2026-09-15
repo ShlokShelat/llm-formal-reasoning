@@ -60,7 +60,7 @@ llm-formal-reasoning/
 │   │   └── train_lora.py           # Appendix G.10
 │   ├── mechanistic/
 │   │   ├── build_adfa_variants.py  # Appendix G.11
-│   │   ├── compute_ace_scores.py   # Appendix G.11
+│   │   ├── compute_ads_scores.py   # Appendix G.11
 │   │   ├── extract_steering_vectors.py  # Appendix G.11
 │   │   └── run_steering_eval.py    # Appendix G.11
 │   └── evaluation/
